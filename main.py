@@ -5,32 +5,33 @@
 #   ○ расширение, если это файл, ○ флаг каталога,
 #   ○ название родительского каталога.
 # 📌В процессе сбора сохраните данные в текстовый файл используя логирование.
-
-
 import os
 import logging
 from collections import namedtuple
+
 
 def data_folder_log(path_in: str):
     """Функция получения данных о директории и её содержимом
 
     Функция на вход принимаеи путь до папки и записывает в лог файл информацию о содержимом:
-    Имя объекта, родительский каталог, типа объекта, размер"""
+    Имя объекта, родительский каталог, типа объекта, размер.
+    Возвращает список из объектов nametuple"""
 
     logger = logging.getLogger(__name__)
     my_format = '{levelname:<4} - {msg}'
     logging.basicConfig(filename='mylog.log', filemode='w', encoding='UTF-8',
                         level=logging.INFO, style='{', format=my_format)
+    res = []
+    Dir = namedtuple('Dir', ['dir_name', 'type', 'size', 'parent_dir'])
+    File = namedtuple('File', ['file_name', 'ext', 'type', 'size', 'parent_dir'])
     for dir_path, dirs_names, files_names in os.walk(path_in):
         dir_name = os.path.basename(dir_path)
         size = get_size(dir_path)
-        Dir = namedtuple('Dir', ['dir_name', 'type', 'size', 'parent_dir'])
-        dir = Dir(dir_name, 'DIR', round(size/1024, 2), os.path.dirname(dir_path))
-
-        result = f'dir_name: {dir_name:<36} {"DIR":<5}   size: {round(size/1024, 2):<10} {"KiB":<11}' \
+        directory = Dir(dir_name, 'DIR', round(size/1024, 2), os.path.dirname(dir_path))
+        res.append(directory)
+        result = f'dir_name: {dir_name:<36} {"DIR":<5}   size: {round(size/1024, 2):<10} {"KiB":<10}' \
                  f' parent_dir: {os.path.dirname(dir_path)}'
         logger.info(msg=f'{result}')
-
 
         for file in files_names:
             if '.' in file:
@@ -40,13 +41,12 @@ def data_folder_log(path_in: str):
                 file_name = file
             file_path = os.path.join(dir_path, file)
             size = get_size(file_path)
-            File = namedtuple('File', ['file_name', 'ext', 'type', 'size', 'parent_dir'])
-            file1 = File('file_name', ext,'File', round(size / 1024, 2), os.path.dirname(file_path))
-
-            result = f'file_name: {file_name:<16} ext: {ext:<13} {"File":<7} size: {round(size / 1024, 2):<10} {"KiB":<10} ' \
-                     f' parent_dir: {os.path.dirname(file_path)}'
+            file1 = File('file_name', ext, 'File', round(size / 1024, 2), os.path.dirname(file_path))
+            res.append(file1)
+            result = f'file_name: {file_name:<16} ext: {ext:<13} {"File":<7} size: {round(size / 1024, 2):<10} ' \
+                     f'{"KiB":<10} parent_dir: {os.path.dirname(file_path)}'
             logger.info(msg=f'{result}')
-    # return result
+    return res
 
 
 def get_size(p):
@@ -65,7 +65,7 @@ def get_size(p):
     return size
 
 
-
-# print(os.path.join(os.getcwd()))
-path_dir = os.path.join(os.getcwd(), 'venv')
-data = data_folder_log(path_dir)
+if __name__ == '__main__':
+    path_dir = os.path.join(os.getcwd(), 'venv')
+    data = data_folder_log(path_dir)
+    [print(_) for _ in data]
