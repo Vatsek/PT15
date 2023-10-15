@@ -9,7 +9,7 @@
 
 import os
 import logging
-
+from collections import namedtuple
 
 def data_folder_log(path_in: str):
     """Функция получения данных о директории и её содержимом
@@ -18,26 +18,35 @@ def data_folder_log(path_in: str):
     Имя объекта, родительский каталог, типа объекта, размер"""
 
     logger = logging.getLogger(__name__)
-    my_format = '{msg}'
+    my_format = '{levelname:<4} - {msg}'
     logging.basicConfig(filename='mylog.log', filemode='w', encoding='UTF-8',
                         level=logging.INFO, style='{', format=my_format)
     for dir_path, dirs_names, files_names in os.walk(path_in):
         dir_name = os.path.basename(dir_path)
         size = get_size(dir_path)
-        result = f'dir_name: {dir_name}, DIR, size: {round(size/1024, 2)} KiB,' \
+        Dir = namedtuple('Dir', ['dir_name', 'type', 'size', 'parent_dir'])
+        dir = Dir(dir_name, 'DIR', round(size/1024, 2), os.path.dirname(dir_path))
+
+        result = f'dir_name: {dir_name:<36} {"DIR":<5}   size: {round(size/1024, 2):<10} {"KiB":<11}' \
                  f' parent_dir: {os.path.dirname(dir_path)}'
         logger.info(msg=f'{result}')
 
-        for file in files_names:
 
-            *file_name, ext = str(file).split('.')
-            file_name = ''.join(file_name)
+        for file in files_names:
+            if '.' in file:
+                *file_name, ext = str(file).split('.')
+                file_name = ''.join(file_name)
+            else:
+                file_name = file
             file_path = os.path.join(dir_path, file)
             size = get_size(file_path)
-            result = f'file_name: {file_name}, ext: {ext}, size: {round(size / 1024, 2)} KiB,' \
+            File = namedtuple('File', ['file_name', 'ext', 'type', 'size', 'parent_dir'])
+            file1 = File('file_name', ext,'File', round(size / 1024, 2), os.path.dirname(file_path))
+
+            result = f'file_name: {file_name:<16} ext: {ext:<13} {"File":<7} size: {round(size / 1024, 2):<10} {"KiB":<10} ' \
                      f' parent_dir: {os.path.dirname(file_path)}'
             logger.info(msg=f'{result}')
-    return result
+    # return result
 
 
 def get_size(p):
@@ -58,5 +67,5 @@ def get_size(p):
 
 
 # print(os.path.join(os.getcwd()))
-path_dir = os.path.join(os.getcwd(), 'venv', 'bin')
+path_dir = os.path.join(os.getcwd(), 'venv')
 data = data_folder_log(path_dir)
